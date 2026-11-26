@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+  itinerary-html · 桌面端模板
+  使用方法：
+  1. 复制此文件到工作目录
+  2. 替换 AMAP_KEY / AMAP_SECURITY
+  3. 填入 TRIP / TRANSIT_HINTS / HOTELS / DAY_META / WEATHER_COORDS / TRIP_DATES / TYPE_NAME
+  4. 替换顶部 <title> 和 .sidebar-header 里的标题
+  5. 按 references/qa-checklist.md 自检
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行程标题 · 占位</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     配色与版式（10.0 墨绿扁平 — 不要改）
+     ============================================================ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root{
+    --ink: #1f3d34;
+    --ink-2: #2a4a40;
+    --ink-3: #3a5d52;
+    --text: #1a2e26;
+    --text-2: #4a5e57;
+    --text-3: #6b7d76;
+    --muted: #9aa9a3;
+    --line: #d8dcd9;
+    --line-2: #e8eae8;
+    --bg: #f7f8f6;
+    --panel: #ffffff;
+    --accent: #c97b4a;
+    --accent-soft: #f5ebe2;
+    --t-transit: #2563eb;
+    --t-scenic: #2a9080;
+    --t-food: #c2410c;
+    --t-hotel: #6d28d9;
+    --t-must: #a03a2e;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
+    --shadow: 0 4px 16px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+    --shadow-lg: 0 12px 40px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.06);
+  }
+
+  html,body{
+    height:100%;color:var(--text);
+    font-family:"Inter","Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    overflow:hidden;
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    font-feature-settings:"cv02","cv03","cv04","cv11";
+    letter-spacing:-0.01em;
+  }
+
+  /* ===== App 三栏 ===== */
+  .app{display:flex;height:100vh;}
+
+  /* ===== 左侧 ===== */
+  .sidebar{
+    width:520px;min-width:520px;
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;
+  }
+  .sidebar-header{
+    padding:28px 28px 22px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .sidebar-header::after{
+    content:'';position:absolute;bottom:-1px;left:28px;
+    width:32px;height:1px;background:var(--ink);
+  }
+  .sidebar-header .brand{
+    font-size:10.5px;font-weight:700;color:var(--ink);
+    letter-spacing:3px;text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .sidebar-header h1{
+    font-size:26px;font-weight:700;color:var(--text);
+    line-height:1.25;letter-spacing:-0.6px;
+  }
+  .sidebar-header .sub-line{
+    display:block;font-size:12.5px;font-weight:400;
+    color:var(--text-3);margin-top:6px;
+  }
+
+  .export-btn{
+    flex-shrink:0;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:7px 14px;font-size:12px;font-weight:600;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;
+    transition:all .2s;letter-spacing:0.5px;text-transform:uppercase;
+  }
+  .export-btn:hover{background:var(--ink-3);}
+  .export-btn:active{background:var(--ink-2);}
+  .export-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .export-btn .export-progress{
+    display:inline-block;width:10px;height:10px;
+    border:1.5px solid rgba(255,255,255,0.3);border-top-color:#fff;
+    border-radius:50%;animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .stats{display:flex;gap:24px;margin-top:18px;padding-top:18px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .stats span{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:500;color:var(--text-3);letter-spacing:0.3px;}
+  .stats span b{color:var(--ink);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;}
+
+  .tabs{display:flex;padding:0 28px;gap:24px;border-bottom:1px solid var(--line);background:#fff;}
+  .tab{padding:14px 0;font-size:14px;color:var(--text-3);cursor:pointer;transition:color .2s;font-weight:500;white-space:nowrap;position:relative;background:transparent;border:none;}
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--ink);font-weight:600;}
+  .tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:var(--ink);}
+
+  /* ===== Timeline ===== */
+  .timeline{flex:1;overflow-y:auto;padding:20px 0 32px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;}
+  .timeline::-webkit-scrollbar{width:4px;}
+  .timeline::-webkit-scrollbar-thumb{background:var(--line);}
+
+  .day{margin:0 28px 20px;background:#fff;border:1px solid var(--line);transition:border-color .2s,background .2s;}
+  .day.active{border-color:var(--ink);}
+  .day-header{padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .2s;}
+  .day-header:hover{background:#fafafa;}
+  .day-badge{
+    width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:12px;color:var(--ink);
+    border:1px solid var(--ink);flex-shrink:0;letter-spacing:0.5px;
+    font-variant-numeric:tabular-nums;
+  }
+  .day-info{flex:1;min-width:0;}
+  .day-title{font-size:15.5px;font-weight:600;color:var(--text);line-height:1.4;letter-spacing:-0.2px;}
+  .day-sub{font-size:12.5px;color:var(--text-3);margin-top:4px;font-weight:400;}
+  .day-arrow{color:var(--muted-2, #cbd5e1);font-size:18px;transition:transform .25s;font-weight:300;}
+  .day.open .day-arrow{transform:rotate(90deg);color:var(--ink);}
+
+  .day-body{display:none;}
+  .day.open .day-body{display:block;}
+  .day-body-inner{padding:4px 20px 16px;border-top:1px solid var(--line);background:#fcfcfc;}
+
+  /* ===== 地点 Item（墨绿卡） ===== */
+  .item{
+    padding:11px 14px;margin:8px 0;border-radius:0;
+    background:var(--ink);color:#fff;
+    border:1px solid var(--ink);border-left:3px solid var(--ink);
+    cursor:pointer;transition:all .15s;
+    display:flex;gap:12px;
+  }
+  .item:hover{background:var(--ink-2);border-color:var(--ink-2);}
+  .item.highlight{background:var(--ink-2);border-color:var(--ink-2);}
+  .item-time{
+    font-size:13px;color:rgba(255,255,255,0.7);font-weight:600;
+    min-width:54px;
+    font-variant-numeric:tabular-nums;letter-spacing:-0.2px;
+    display:flex;flex-direction:column;align-items:flex-start;gap:5px;
+  }
+  .item-content{flex:1;min-width:0;}
+  .item-title{
+    font-size:15px;font-weight:600;margin-bottom:4px;
+    color:#fff;line-height:1.45;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    letter-spacing:-0.2px;
+  }
+  .item-title .ord{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:22px;height:22px;
+    color:var(--ink);background:#fff;
+    font-size:12px;font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  .item-desc{font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;}
+  .wx-badge{
+    display:inline-flex;align-items:center;gap:3px;
+    font-size:11.5px;font-weight:600;color:#fff;
+    background:rgba(255,255,255,0.15);
+    padding:2px 7px;border:1px solid rgba(255,255,255,0.25);
+    letter-spacing:0.2px;
+  }
+  .wx-loading{color:rgba(255,255,255,0.5)!important;background:rgba(255,255,255,0.08)!important;}
+  .wx-big{padding:0 1px;}
+  .wx-temp{font-variant-numeric:tabular-nums;}
+  .item-tag{
+    display:inline-block;padding:2px 7px;
+    font-size:10.5px;font-weight:700;color:#fff;
+    letter-spacing:0.5px;
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.22);
+  }
+  .tag-transit{background:rgba(96,165,250,0.85);border-color:rgba(147,197,253,0.6);}
+  .tag-scenic{background:rgba(110,231,183,0.85);border-color:rgba(167,243,208,0.6);}
+  .tag-food{background:rgba(251,146,60,0.85);border-color:rgba(253,186,116,0.6);}
+  .tag-hotel{background:rgba(196,181,253,0.85);border-color:rgba(221,214,254,0.6);}
+  .tag-must{background:var(--accent);border-color:rgba(255,255,255,0.5);}
+
+  /* Transit Segment */
+  .transit-seg{
+    display:flex;align-items:flex-start;gap:9px;
+    margin:8px 0 8px 32px;padding:9px 12px;
+    background:rgba(31,61,52,0.06);
+    border-left:2px solid var(--ink);
+    font-size:12px;color:var(--text-2);line-height:1.5;position:relative;
+  }
+  .transit-seg::before{content:'';position:absolute;left:-32px;top:50%;width:24px;height:1px;background:var(--line);}
+  .transit-seg::after{content:'';position:absolute;left:-6px;top:50%;width:6px;height:6px;background:var(--ink);transform:translateY(-50%) rotate(45deg);}
+  .transit-seg .ts-content{flex:1;min-width:0;}
+  .transit-seg .ts-mode{font-weight:600;color:var(--text);margin-bottom:3px;font-size:13.5px;}
+  .transit-seg .ts-detail{color:var(--text-2);font-size:12.5px;}
+  .transit-seg .ts-meta{margin-top:3px;font-size:11px;color:var(--text-3);display:flex;gap:12px;}
+  .transit-seg .ts-meta b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
+
+  /* ===== Transit / Hotel 视图 ===== */
+  .transit-view, .hotel-view{padding:20px 28px 28px;}
+  .transit-view h3, .hotel-view h3{
+    font-size:11px;font-weight:600;color:var(--text-3);
+    margin:0 0 14px;letter-spacing:2px;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;
+  }
+  .transit-view h3 span, .hotel-view h3 span{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:auto;letter-spacing:0;text-transform:none;}
+
+  .transit-card-list{display:flex;flex-direction:column;gap:12px;}
+  .transit-card{background:#fff;border:1px solid var(--line);padding:16px 18px;transition:border-color .2s;}
+  .transit-card:hover{border-color:var(--ink);}
+  .tc-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);}
+  .tc-day{font-size:13px;font-weight:700;color:#fff;background:var(--t-transit);padding:3px 10px;border-radius:5px;letter-spacing:0.5px;}
+  .tc-train{display:inline-block;padding:3px 9px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;}
+  .tc-row{display:flex !important;align-items:center;gap:12px;font-size:15px;color:var(--text);font-weight:600;margin-bottom:10px;line-height:1.5;}
+  .tc-end{flex:1 !important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tc-from{text-align:left;} .tc-to{text-align:right;} .tc-stations{color:var(--text);}
+  .tc-times-line{font-size:14px;color:var(--muted);font-weight:500;}
+  .tc-arrow{color:var(--accent);font-size:16px;font-weight:700;flex-shrink:0;min-width:16px;text-align:center;}
+  .tc-meta{display:flex;justify-content:space-between;font-size:14px;color:var(--text-2);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);}
+  .tc-price{color:var(--accent);font-weight:700;}
+
+  .hotel-list{display:flex;flex-direction:column;gap:12px;margin-top:10px;}
+  .hotel-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow-sm);}
+  .hc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .hc-day{font-size:11px;font-weight:700;color:#fff;background:var(--t-transit);padding:3px 9px;border-radius:5px;letter-spacing:0.5px;}
+  .hc-nights{font-size:12px;color:var(--muted);font-weight:600;}
+  .hc-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .hc-type{display:inline-block;font-size:11px;color:var(--accent);background:rgba(255,107,53,0.1);padding:2px 7px;border-radius:4px;margin-bottom:8px;}
+  .hc-info{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2);}
+  .hc-row{display:flex;align-items:flex-start;gap:6px;}
+  .hc-label{flex-shrink:0;color:var(--muted);font-weight:600;min-width:60px;}
+  .hc-total{margin-top:4px;padding-top:6px;border-top:1px dashed var(--line);font-weight:700;color:var(--accent);}
+
+  /* ===== 中间地图 ===== */
+  .map-area{
+    flex:1;min-width:420px;position:relative;
+    display:flex;flex-direction:column;background:var(--bg);
+  }
+  .day-switch{height:50px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 12px;gap:7px;overflow-x:auto;}
+  .day-switch::-webkit-scrollbar{height:4px;}
+  .day-switch::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px;}
+  .day-pill{
+    flex-shrink:0;padding:6px 12px;
+    background:var(--panel-2);border:1px solid var(--line);
+    border-radius:18px;cursor:pointer;
+    display:flex;align-items:center;gap:5px;
+    transition:all .2s;color:var(--text-2);font-size:12px;font-weight:600;
+  }
+  .day-pill .pill-num{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;background:var(--line-strong, #cdd3df);color:var(--text);font-size:10.5px;font-weight:700;}
+  .day-pill:hover{border-color:var(--accent);color:var(--accent);}
+  .day-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 8px rgba(255,107,53,0.3);}
+  .day-pill.active .pill-num{background:rgba(255,255,255,0.25);color:#fff;}
+
+  .day-pill[data-day="0"]{border-color:#cbd5e1;}
+  .day-pill[data-day="0"] .pill-num{background:#94a3b8;color:#fff;}
+  .day-pill[data-day="1"]{border-color:#bfdbfe;}
+  .day-pill[data-day="1"] .pill-num{background:#3b82f6;color:#fff;}
+  .day-pill[data-day="2"]{border-color:#fbcfe8;}
+  .day-pill[data-day="2"] .pill-num{background:#ec4899;color:#fff;}
+  .day-pill[data-day="3"]{border-color:#fed7aa;}
+  .day-pill[data-day="3"] .pill-num{background:#f59e0b;color:#fff;}
+  .day-pill[data-day="4"]{border-color:#a7f3d0;}
+  .day-pill[data-day="4"] .pill-num{background:#10b981;color:#fff;}
+  .day-pill[data-day="5"]{border-color:#fde68a;}
+  .day-pill[data-day="5"] .pill-num{background:#f59e0b;color:#fff;}
+
+  .map-toolbar-mini{height:38px;background:var(--panel-2);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 14px;gap:10px;font-size:12px;color:var(--text-2);}
+  .map-toolbar-mini h2{font-size:12.5px;font-weight:600;color:var(--text);flex:1;}
+  .map-toolbar-mini .badge{background:var(--panel-3, #e8ecf4);padding:2px 8px;border-radius:10px;font-size:11px;color:var(--text-2);}
+
+  #map{flex:1;width:100%;height:100%;min-height:400px;background:#e8ecf4;}
+
+  .loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-2);font-size:13px;z-index:5;background:rgba(255,255,255,0.95);padding:10px 20px;border-radius:8px;border:1px solid var(--line);}
+  .error-tip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:20px 28px;color:var(--text);font-size:13px;z-index:5;max-width:520px;line-height:1.7;box-shadow:var(--shadow-lg);}
+  .error-tip code{background:var(--panel-3, #e8ecf4);padding:1px 6px;border-radius:4px;color:var(--accent);font-size:12px;}
+
+  .marker-card{
+    position:relative;background:#fff;border:1.5px solid var(--border);
+    border-left-width:4px;border-radius:8px;
+    padding:6px 10px 6px 8px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.15);
+    min-width:130px;max-width:210px;
+    transform:translate(-50%, -100%);cursor:pointer;
+    transition:transform .15s,box-shadow .15s;font-family:inherit;
+  }
+  .marker-card:hover{transform:translate(-50%,-100%) translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.2);z-index:1000;}
+  .marker-card .mc-head{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+  .marker-card .mc-order{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:0 7px;font-variant-numeric:tabular-nums;}
+  .marker-card .mc-icon{font-size:18px;line-height:1;}
+  .marker-card .mc-time{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:auto;}
+  .marker-card .mc-name{font-size:15.5px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .marker-card .mc-sub{font-size:12.5px;color:var(--text-2);line-height:1.4;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .marker-card .mc-tail{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#fff;border-right:1.5px solid var(--border);border-bottom:1.5px solid var(--border);}
+  .marker-card.t-transit{border-left-color:var(--t-transit);}
+  .marker-card.t-scenic{border-left-color:var(--t-scenic);}
+  .marker-card.t-food{border-left-color:var(--t-food);}
+  .marker-card.t-hotel{border-left-color:var(--t-hotel);}
+  .marker-card.t-must{border-color:#ff6b35;border-left-color:#ff6b35;background:#fff8f5;}
+  .marker-card.t-must .mc-name{color:#c2410c;}
+  .marker-card.bouncing{animation:markerBounce 0.55s ease 2;}
+  @keyframes markerBounce{0%,100%{transform:translate(-50%,-100%);}50%{transform:translate(-50%,-120%);}}
+
+  /* ===== 右侧详情 ===== */
+  .detail-panel{width:380px;min-width:380px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:var(--shadow);}
+  .detail-header{padding:16px 18px 12px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#ffffff 0%,#fafbfd 100%);flex-shrink:0;}
+  .detail-day{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:4px;font-variant-numeric:tabular-nums;}
+  .detail-title{font-size:19px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:6px;}
+  .detail-meta{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;}
+  .detail-tag{display:inline-block;padding:3px 9px;border-radius:4px;font-weight:600;}
+  .tag-transit-d{background:#dbeafe;color:#1e40af;}
+  .tag-scenic-d{background:#d1fae5;color:#065f46;}
+  .tag-food-d{background:#fed7aa;color:#9a3412;}
+  .tag-hotel-d{background:#e9d5ff;color:#6b21a8;}
+  .tag-must-d{background:#ffedd5;color:#c2410c;border:1px solid #fed7aa;}
+  .wx-detail-badge{background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%)!important;color:#92400e!important;border:1px solid #fcd34d!important;font-weight:600;}
+
+  .detail-body{flex:1;overflow-y:auto;background:var(--bg);}
+  .detail-body::-webkit-scrollbar{width:6px;}
+  .detail-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+  .section{margin:0 14px 12px;padding:11px 13px;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
+  .section-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px;letter-spacing:0.3px;}
+  .section-content{font-size:13.5px;color:var(--text-2);line-height:1.7;}
+  .section-content b{color:var(--text);font-weight:600;}
+  .section-list{margin:0;padding-left:0;list-style:none;}
+  .section-list li{padding:5px 0;font-size:13.5px;color:var(--text-2);line-height:1.6;position:relative;padding-left:18px;}
+  .section-list li::before{content:'';position:absolute;left:4px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--accent);}
+
+  .info-grid{display:flex;flex-wrap:wrap;gap:6px;margin:0 14px 12px;}
+  .info-grid .ig-item{flex:1 1 100px;min-width:90px;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:9px 6px;text-align:center;}
+  .info-grid .ig-label{font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:0.2px;text-transform:uppercase;}
+  .info-grid .ig-val{font-size:13.5px;color:var(--accent);font-weight:700;margin-top:3px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+  .detail-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);padding:40px 20px;text-align:center;}
+  .detail-empty .de-emoji{font-size:54px;margin-bottom:10px;opacity:0.5;}
+  .detail-empty h3{font-size:15px;color:var(--text);margin-bottom:6px;}
+  .detail-empty p{font-size:12px;line-height:1.6;}
+
+  @media (max-width: 1280px){.detail-panel{width:300px;min-width:300px;}}
+  @media (max-width: 1024px){.app{flex-direction:column;}.sidebar,.detail-panel{width:100%;min-width:0;max-height:35vh;}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 左侧时间轴：替换标题与 stats -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">JOURNEY · 行程</div>
+      <div class="header-row">
+        <h1>行程标题占位<span class="sub-line">副标题占位 · 比如日期范围 / 同行人数</span></h1>
+        <button class="export-btn" id="exportBtn" onclick="exportItinerary()" title="导出左侧攻略为图片">
+          <span>📷 导出</span>
+        </button>
+      </div>
+      <div class="stats">
+        <span>📍 <b>0</b> 城市</span>
+        <span>🎯 <b>0</b> 景点</span>
+        <span>🍜 <b>0</b> 美食区</span>
+        <span>🦁 <b>0</b> 非遗</span>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-view="all">📋 全程</div>
+      <div class="tab" data-view="transit">🚆 交通</div>
+      <div class="tab" data-view="hotel">🏨 酒店</div>
+    </div>
+    <div class="timeline" id="timeline"></div>
+  </aside>
+
+  <!-- 中间地图：替换 day-pill 标题 -->
+  <main class="map-area">
+    <div class="day-switch" id="daySwitch">
+      <div class="day-pill active" data-day="0"><span class="pill-num">D0</span>出发</div>
+      <div class="day-pill" data-day="1"><span class="pill-num">D1</span>Day 1</div>
+      <div class="day-pill" data-day="2"><span class="pill-num">D2</span>Day 2</div>
+      <div class="day-pill" data-day="3"><span class="pill-num">D3</span>Day 3</div>
+      <div class="day-pill" data-day="4"><span class="pill-num">D4</span>Day 4</div>
+      <div class="day-pill" data-day="5"><span class="pill-num">D5</span>Day 5</div>
+    </div>
+    <div class="map-toolbar-mini">
+      <h2 id="mapTitle">🗺 Day 标题占位</h2>
+      <span class="badge" id="countBadge">0 个标记</span>
+    </div>
+    <div id="map">
+      <div class="loading" id="loadingTip">地图加载中…</div>
+    </div>
+  </main>
+
+  <!-- 右侧详情 -->
+  <aside class="detail-panel" id="detailPanel">
+    <div class="detail-empty" id="detailEmpty">
+      <div class="de-emoji">📍</div>
+      <h3>点击左侧任意地点</h3>
+      <p>查看拍照建议、门票、营业时间等详细信息</p>
+    </aside>
+
+</div>
+
+<script>
+/* ============================================================
+   ★ 用户配置区 ★ — 替换以下 4 个值
+   ============================================================ */
+const AMAP_KEY = '<请替换：高德 Web 端 JS Key>';
+const AMAP_SECURITY = '<请替换：对应的 securityJsCode>';
+
+const TRIP = [
+  /* 示例格式 — 删除后填入真实数据
+  { day:0, time:'HH:MM', type:'transit', icon:'🚄', name:'POI 名', desc:'简述', city:'城市', lng:113.xxx, lat:23.xxx,
+    info: { ticket:'¥X', hours:'HH:MM-HH:MM', duration:'Xh', best:'...', booking:'...', photo:['...'], tips:['...'] }
+  },
+  */
+];
+
+const TRANSIT_HINTS = {
+  /* 格式：'<day>:<order>' = 从第 N 个 POI 出发的下一段交通
+  '1:2': { mode:'🚄 交通方式（火车/航班/地铁）', from:'起点', to:'终点', depart:'HH:MM', arrive:'HH:MM', nextDay:false, cost:'¥X', time:'X 分钟' },
+  */
+};
+
+const HOTELS = [
+  /* 如无酒店 tab 需求，可删除整个数组 + 相关渲染函数
+  { day:'D1-D2', name:'酒店全名', type:'连锁', nights:2, checkIn:'2026-08-01', checkOut:'2026-08-03', address:'...', price:'¥XXX', total:'¥XXX', order:1 }
+  */
+];
+
+const DAY_META = {
+  /* 覆盖所有出现过的 day
+  0:{title:'D0 · 主题', subtitle:'一句话核心'},
+  1:{title:'D1 · 主题', subtitle:'...'},
+  */
+};
+
+const TYPE_NAME = {transit:'交通', food:'美食', hotel:'住宿', scenic:'景点', must:'必看'};
+
+const WEATHER_COORDS = {
+  /* 用每天 TRIP 主要城市的 POI 坐标填充
+  0: {lat: 39.9042, lng: 116.4074, name:'城市'},
+  */
+};
+
+const TRIP_DATES = ['YYYY-MM-DD', 'YYYY-MM-DD', ...];
+
+/* ============================================================
+   以下为渲染逻辑 — 通常不需要改
+   ============================================================ */
+
+const VALID = TRIP.filter(t => {
+  const ok = typeof t.lng === 'number' && typeof t.lat === 'number' && !isNaN(t.lng) && !isNaN(t.lat) && t.lng >= 73 && t.lng <= 135 && t.lat >= 18 && t.lat <= 54;
+  return ok;
+});
+console.log(`[data] valid: ${VALID.length} / ${TRIP.length}`);
+
+for (let d=0; d<=10; d++){
+  const arr = VALID.filter(t => t.day === d);
+  arr.forEach((it, i) => { it.order = i + 1; });
+}
+
+const WMO_BIG = {0:['☀️','晴'],1:['☀️','晴'],2:['🌤️','多云'],3:['☁️','阴'],45:['🌫️','雾'],48:['🌫️','雾'],51:['🌧️','雨'],53:['🌧️','雨'],55:['🌧️','雨'],61:['🌧️','雨'],63:['🌧️','雨'],65:['🌧️','雨'],80:['🌧️','雨'],81:['🌧️','雨'],82:['🌧️','雨'],71:['🌨️','雪'],73:['🌨️','雪'],75:['🌨️','雪'],77:['🌨️','雪'],85:['🌨️','雪'],86:['🌨️','雪'],95:['⛈️','雷雨'],96:['⛈️','雷雨'],99:['⛈️','雷雨']};
+const WMO_DETAIL = {0:'晴',1:'晴间多云',2:'多云',3:'阴',45:'雾',48:'雾凇',51:'小毛雨',53:'毛雨',55:'大毛雨',61:'小雨',63:'中雨',65:'大雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'小阵雨',81:'阵雨',82:'强阵雨',85:'小阵雪',86:'大阵雪',95:'雷雨',96:'雷雨夹冰雹',99:'强雷雨夹冰雹'};
+
+async function fetchWeather(){
+  const cacheKey = 'wx_v1_' + TRIP_DATES.join('_');
+  const cached = localStorage.getItem(cacheKey);
+  if (cached){
+    try {
+      const data = JSON.parse(cached);
+      if (Date.now() - data.ts < 6*3600*1000) return data.days;
+    } catch(e){}
+  }
+  const results = {};
+  for (let d = 0; d < TRIP_DATES.length; d++){
+    const c = WEATHER_COORDS[d];
+    if (!c) continue;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lng}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${TRIP_DATES[d]}&end_date=${TRIP_DATES[d]}`;
+    try {
+      const r = await fetch(url);
+      const j = await r.json();
+      const day = j.daily;
+      const code = day.weather_code[0];
+      const hi = Math.round(day.temperature_2m_max[0]);
+      const lo = Math.round(day.temperature_2m_min[0]);
+      results[d] = { icon: WMO_BIG[code]?.[0] || '❓', bigDesc: WMO_BIG[code]?.[1] || '未知', detail: WMO_DETAIL[code] || '未知', hi, lo };
+    } catch(e){
+      results[d] = { icon: '❓', bigDesc: '暂无', detail: '暂无', hi: '—', lo: '—' };
+    }
+  }
+  try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), days: results })); } catch(e){}
+  return results;
+}
+
+async function loadWeather(){
+  document.querySelectorAll('.day').forEach(dayEl => {
+    dayEl.querySelectorAll('.item').forEach(itemEl => {
+      if (itemEl.querySelector('.wx-badge')) return;
+      const title = itemEl.querySelector('.item-title');
+      if (!title) return;
+      const badge = document.createElement('div');
+      badge.className = 'wx-badge wx-loading';
+      badge.innerHTML = '⏳ <span class="wx-big">加载中</span>';
+      title.appendChild(badge);
+    });
+  });
+  let data = {};
+  try { data = await fetchWeather() || {}; } catch(e){ console.error('[weather]', e); }
+  document.querySelectorAll('.day').forEach(dayEl => {
+    const day = String(parseInt(dayEl.dataset.day));
+    const wx = data && (data[day] || data[parseInt(day)]);
+    if (!wx || wx.icon == null) {
+      dayEl.querySelectorAll('.wx-badge').forEach(b => {
+        b.classList.remove('wx-loading');
+        b.innerHTML = '❓ <span class="wx-big">暂无</span>';
+      });
+      return;
+    }
+    try { dayEl.dataset.wx = JSON.stringify(wx); } catch(e){}
+    const icon = wx.icon || '❓';
+    const big = wx.bigDesc || wx.desc || '未知';
+    const det = wx.detail || wx.desc || big;
+    const hi = wx.hi;
+    const lo = wx.lo;
+    const hiStr = (typeof hi === 'number') ? hi : '—';
+    const loStr = (typeof lo === 'number') ? lo : '—';
+    dayEl.querySelectorAll('.wx-badge').forEach(b => {
+      b.classList.remove('wx-loading');
+      b.title = `${det} · ${loStr}°/${hiStr}°C`;
+      b.innerHTML = `${icon} <span class="wx-big">${big}</span>`;
+    });
+  });
+}
+
+function typeToTag(type){ return `<span class="item-tag tag-${type}">${TYPE_NAME[type] || ''}</span>`; }
+
+function renderTimeline(filter='all'){
+  const container = document.getElementById('timeline');
+  container.innerHTML = '';
+  if (filter === 'transit') return renderTransitView(container);
+  if (filter === 'hotel')  return renderHotelView(container);
+  for (let d=0; d<=10; d++){
+    const items = VALID.filter(t => t.day === d);
+    if (items.length === 0) continue;
+    const meta = DAY_META[d];
+    if (!meta) continue;
+    const dayEl = document.createElement('div');
+    dayEl.className = 'day';
+    dayEl.dataset.day = d;
+    dayEl.innerHTML = `
+      <div class="day-header" onclick="toggleDay(this)">
+        <div class="day-badge">D${d}</div>
+        <div class="day-info">
+          <div class="day-title">${meta.title}</div>
+          <div class="day-sub">${meta.subtitle} · ${items.length} 个</div>
+        </div>
+        <div class="day-arrow">›</div>
+      </div>
+      <div class="day-body">
+        <div class="day-body-inner">
+          ${items.map((it) => {
+            const itemIdx = VALID.indexOf(it);
+            const transit = TRANSIT_HINTS[d + ':' + it.order];
+            const transitHtml = transit ? `
+              <div class="transit-seg">
+                <div class="ts-content">
+                  <div class="ts-mode">${transit.mode}</div>
+                  <div class="ts-detail">${transit.from || ''} → ${transit.to || ''}</div>
+                  <div class="ts-meta"><span>💰 <b>${transit.cost}</b></span><span>⏱ <b>${transit.time}</b></span></div>
+                </div>
+              </div>` : '';
+            return `
+              ${transitHtml}
+              <div class="item" data-idx="${itemIdx}" onclick="selectItem(${itemIdx})" onmouseenter="highlightItem(${itemIdx})" onmouseleave="unhighlightItem()">
+                <div class="item-time">${it.time}${typeToTag(it.type)}</div>
+                <div class="item-content">
+                  <div class="item-title"><span class="ord">${it.order}</span>${it.icon} ${it.name}</div>
+                  <div class="item-desc">${it.desc}</div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    container.appendChild(dayEl);
+  }
+  document.querySelectorAll('.day .day-body').forEach(b => b.style.display = 'none');
+}
+
+function renderTransitView(container){
+  const isTrain = (mode) => /(G|D|C|Z|T|K|A)\d+/.test(mode || '');
+  const parseTrain = (mode) => {
+    const m = (mode || '').match(/(G|D|C|Z|T|K|A)\s*(\w+)/);
+    return m ? `${m[1]}${m[2]}` : '';
+  };
+  const rows = [];
+  Object.entries(TRANSIT_HINTS).forEach(([k, h]) => {
+    if (!isTrain(h.mode)) return;
+    const [day, idx] = k.split(':');
+    rows.push({ day: parseInt(day), idx: parseInt(idx), trainNo: parseTrain(h.mode), from: h.from || '', to: h.to || '', depart: h.depart || '', arrive: `${h.nextDay ? '次日 ' : ''}${h.arrive || ''}`, nextDay: !!h.nextDay, duration: h.time, cost: h.cost });
+  });
+  rows.sort((a, b) => { if (a.day !== b.day) return a.day - b.day; if (a.depart && b.depart) return a.depart.localeCompare(b.depart); return a.idx - b.idx; });
+  const trainCardsHtml = rows.map(r => {
+    const from = r.from || '—';
+    const to = r.to || '—';
+    const depart = r.depart || '';
+    const arrive = r.arrive;
+    return `
+      <div class="transit-card">
+        <div class="tc-head">
+          <span class="tc-day">D${r.day}</span>
+          <span class="tc-train">${r.trainNo}</span>
+        </div>
+        <div class="tc-row tc-stations">
+          <span class="tc-end tc-from">${from}</span>
+          <span class="tc-arrow">→</span>
+          <span class="tc-end tc-to">${to}</span>
+        </div>
+        <div class="tc-row tc-times-line">
+          <span class="tc-end tc-from">${depart}</span>
+          <span class="tc-arrow">→</span>
+          <span class="tc-end tc-to">${arrive}</span>
+        </div>
+        <div class="tc-meta">
+          <span>⏱ ${r.duration || '—'}</span>
+          <span class="tc-price">${r.cost || '—'}</span>
+        </div>
+      </div>`;
+  }).join('');
+  container.innerHTML = `
+    <div class="transit-view">
+      <h3>🚄 火车 / 城际 / 航班 · <span style="color:var(--muted);font-weight:500;">${rows.length} 条 · 按时间顺序</span></h3>
+      <div class="transit-card-list">${trainCardsHtml || '<div class="transit-empty">暂无车次数据</div>'}</div>
+    </div>`;
+}
+
+function renderHotelView(container){
+  if (!HOTELS || HOTELS.length === 0){
+    container.innerHTML = '<div class="hotel-view"><h3>🏨 酒店清单</h3><div class="hotel-empty">本次行程未填写酒店</div></div>';
+    return;
+  }
+  HOTELS.sort((a, b) => a.order - b.order);
+  const parseTotal = (s) => parseInt((s || '').split('-')[0].replace(/[^\d]/g, '')) || 0;
+  const totalLow = HOTELS.reduce((s, h) => s + parseTotal(h.total), 0);
+  const hotelHtml = HOTELS.map((h) => `
+    <div class="hotel-card">
+      <div class="hc-head">
+        <div class="hc-day">${h.day}</div>
+        <div class="hc-nights">${h.nights} 晚</div>
+      </div>
+      <div class="hc-name">${h.name}</div>
+      <div class="hc-type">${h.type}</div>
+      <div class="hc-info">
+        <div class="hc-row"><span class="hc-label">📅 入住</span><span>${h.checkIn}</span></div>
+        <div class="hc-row"><span class="hc-label">📅 离店</span><span>${h.checkOut}</span></div>
+        <div class="hc-row"><span class="hc-label">📍 地址</span><span>${h.address}</span></div>
+        <div class="hc-row"><span class="hc-label">💰 单价</span><span>${h.price}</span></div>
+        <div class="hc-row hc-total"><span class="hc-label">💵 小计</span><span>${h.total}</span></div>
+      </div>
+    </div>
+  `).join('');
+  container.innerHTML = `
+    <div class="hotel-view">
+      <h3>🏨 酒店清单 · <span style="color:var(--muted);font-weight:500;">${HOTELS.length} 家 · ¥${totalLow} 合计</span></h3>
+      <div class="hotel-list">${hotelHtml}</div>
+    </div>`;
+}
+
+function toggleDay(header){
+  const dayEl = header.parentElement;
+  const body = dayEl.querySelector('.day-body');
+  const wasOpen = dayEl.classList.contains('open');
+  if (wasOpen) {
+    dayEl.classList.remove('open');
+    if (body) body.style.display = 'none';
+  } else {
+    dayEl.classList.add('open');
+    if (body) body.style.display = 'block';
+  }
+  const day = parseInt(dayEl.dataset.day);
+  if (!wasOpen) selectDay(day);
+}
+
+let map = null;
+let markers = [];
+let polylines = [];
+let currentDay = 0;
+
+function clearMap(){
+  if (markers.length) markers.forEach(m => m.marker.setMap(null));
+  if (polylines.length) polylines.forEach(p => p.setMap(null));
+  markers = []; polylines = [];
+}
+
+function buildMarkerCard(item){
+  const typeKey = item.type === 'must' ? 'must' : item.type;
+  const itemIdx = VALID.indexOf(item);
+  const transit = TRANSIT_HINTS[item.day + ':' + item.order];
+  const transitHtml = transit ? `<div class="mc-sub">${transit.mode} → ${transit.time}</div>` : '';
+  return `
+    <div class="marker-card t-${typeKey}" data-idx="${itemIdx}">
+      <div class="mc-head">
+        <span class="mc-order">${item.order}</span>
+        <span class="mc-icon">${item.icon}</span>
+        <span class="mc-time">${item.time}</span>
+      </div>
+      <div class="mc-name">${item.name}</div>
+      ${transitHtml}
+      <div class="mc-tail"></div>
+    </div>`;
+}
+
+function selectDay(day){
+  currentDay = day;
+  document.querySelectorAll('.day-pill').forEach(p => p.classList.toggle('active', parseInt(p.dataset.day) === day));
+  document.querySelectorAll('.day').forEach(e => {
+    e.classList.remove('active'); e.classList.remove('open');
+    const b = e.querySelector('.day-body'); if (b) b.style.display = 'none';
+  });
+  const target = document.querySelector(`.day[data-day="${day}"]`);
+  if (target) {
+    target.classList.add('active'); target.classList.add('open');
+    const tb = target.querySelector('.day-body'); if (tb) tb.style.display = 'block';
+  }
+  const meta = DAY_META[day];
+  document.getElementById('mapTitle').textContent = `🗺 ${meta ? meta.title : ''}`;
+  document.getElementById('countBadge').textContent = `${VALID.filter(t=>t.day===day).length} 个标记`;
+  const items = VALID.filter(t => t.day === day);
+  renderMarkers(items);
+  focusMapOnItems(items);
+}
+
+function renderMarkers(items){
+  if (!map) return;
+  clearMap();
+  items.forEach((it) => {
+    const marker = new AMap.Marker({
+      position: [it.lng, it.lat],
+      content: buildMarkerCard(it),
+      offset: [0, 0],
+      zIndex: it.type === 'must' ? 200 : 100,
+      title: it.name
+    });
+    marker.on('click', () => selectItem(VALID.indexOf(it)));
+    marker.setMap(map);
+    markers.push({marker, item: it});
+  });
+}
+
+function focusMapOnItems(items){
+  if (!map || items.length === 0) return;
+  try {
+    if (items.length === 1){ map.setZoomAndCenter(13, [items[0].lng, items[0].lat]); return; }
+    const uniq = [];
+    items.forEach(it => { if (!uniq.some(u => Math.abs(u.lng - it.lng) < 0.001 && Math.abs(u.lat - it.lat) < 0.001)) uniq.push(it); });
+    if (uniq.length === 1){ map.setZoomAndCenter(13, [uniq[0].lng, uniq[0].lat]); return; }
+    let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+    uniq.forEach(it => {
+      if (it.lng < minLng) minLng = it.lng;
+      if (it.lng > maxLng) maxLng = it.lng;
+      if (it.lat < minLat) minLat = it.lat;
+      if (it.lat > maxLat) maxLat = it.lat;
+    });
+    const span = Math.max(maxLng - minLng, maxLat - minLat);
+    let zoom = span > 8 ? 5 : span > 2 ? 7 : span > 0.5 ? 9 : span > 0.1 ? 11 : span > 0.05 ? 12 : 13;
+    map.setZoomAndCenter(zoom, [(minLng + maxLng) / 2, (minLat + maxLat) / 2]);
+  } catch(e) { console.warn('[focusMap] error:', e); }
+}
+
+function highlightItem(idx){
+  const it = VALID[idx]; if (!it) return;
+  document.querySelectorAll('.item.highlight').forEach(e => e.classList.remove('highlight'));
+  const item = document.querySelector(`.item[data-idx="${idx}"]`);
+  if (item){ item.classList.add('highlight'); item.scrollIntoView({behavior:'smooth', block:'nearest'}); }
+  const m = markers.find(x => x.item === it);
+  if (m && m.marker){ m.marker.setTop(true); }
+}
+function unhighlightItem(){ document.querySelectorAll('.item.highlight').forEach(e => e.classList.remove('highlight')); }
+
+function selectItem(idx){
+  const it = VALID[idx]; if (!it) return;
+  if (currentDay !== it.day) selectDay(it.day);
+  highlightItem(idx);
+  if (!map) return;
+  try { map.setZoomAndCenter(14, [it.lng, it.lat]); } catch(e) {}
+  const m = markers.find(x => x.item === it);
+  if (m && m.marker){
+    try { m.marker.setTop(true); } catch(e) {}
+    const card = m.marker.getContentDom ? m.marker.getContentDom() : null;
+    const cardEl = card || m.marker.dom;
+    if (cardEl && cardEl.classList){
+      cardEl.classList.remove('bouncing'); void cardEl.offsetWidth;
+      cardEl.classList.add('bouncing');
+      setTimeout(() => cardEl.classList.remove('bouncing'), 1300);
+    }
+  }
+  renderDetail(it);
+}
+
+function renderDetail(it){
+  const panel = document.getElementById('detailPanel');
+  const info = it.info || {};
+  const typeName = TYPE_NAME[it.type] || '地点';
+  const transit = TRANSIT_HINTS[it.day + ':' + it.order];
+  const dayEl = document.querySelector(`.day[data-day="${it.day}"]`);
+  let wx = null;
+  if (dayEl?.dataset?.wx) { try { wx = JSON.parse(dayEl.dataset.wx); } catch(e){} }
+  const photoTips = (info.photo || []).map(t => `<li>${t}</li>`).join('');
+  const tipItems = (info.tips || []).map(t => `<li>${t}</li>`).join('');
+  panel.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-day">Day ${it.day} · 第 ${it.order} 个 · ${it.time}</div>
+      <div class="detail-title">${it.icon} ${it.name}</div>
+      <div class="detail-meta">
+        <span class="detail-tag tag-${it.type}-d">${typeName}</span>
+        ${info.booking ? `<span class="detail-tag" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ 需预约</span>` : ''}
+        ${wx && wx.icon ? `<span class="detail-tag wx-detail-badge" title="${wx.detail || wx.desc || '天气'}">${wx.icon} ${wx.detail || wx.desc || wx.bigDesc || ''} · ${typeof wx.lo === 'number' ? wx.lo : '—'}°/${typeof wx.hi === 'number' ? wx.hi : '—'}°C</span>` : ''}
+      </div>
+    </div>
+    <div class="detail-body">
+      <div class="info-grid">
+        ${info.ticket ? `<div class="ig-item"><div class="ig-label">门票 / 人均</div><div class="ig-val">${info.ticket}</div></div>` : ''}
+        ${info.hours ? `<div class="ig-item"><div class="ig-label">营业时间</div><div class="ig-val" style="font-size:11px;">${info.hours}</div></div>` : ''}
+        ${info.duration ? `<div class="ig-item"><div class="ig-label">建议时长</div><div class="ig-val">${info.duration}</div></div>` : ''}
+      </div>
+      <div class="section">
+        <div class="section-title">📍 基础信息</div>
+        <div class="section-content"><b>${it.desc}</b></div>
+      </div>
+      ${info.booking ? `<div class="section" style="border-color:#fecaca;background:#fef2f2;"><div class="section-title" style="color:#dc2626;">⚠️ 预约 / 购票</div><div class="section-content"><b>${info.booking}</b></div></div>` : ''}
+      ${info.photo && info.photo.length ? `<div class="section"><div class="section-title">📸 拍照打卡建议</div><ul class="section-list">${photoTips}</ul></div>` : ''}
+      ${info.tips && info.tips.length ? `<div class="section"><div class="section-title">💡 贴士</div><ul class="section-list">${tipItems}</ul></div>` : ''}
+      ${transit ? `<div class="section" style="background:linear-gradient(135deg,#eff6ff 0%,#f9fbff 100%);border-color:#bfdbfe;"><div class="section-title" style="color:#1e40af;">🚦 下一段交通</div><div class="section-content"><b style="color:#1e40af;">${transit.mode}</b><br>${(transit.from || '')} → ${(transit.to || '')}<br>${transit.depart ? `${transit.depart || ''}${transit.nextDay ? '+1' : ''} → ${(transit.arrive || '')}` : ''}<span style="font-size:11px;">💰 ${transit.cost} · ⏱ ${transit.time}</span></div></div>` : ''}
+    </div>`;
+}
+
+function clearDetail(){
+  const panel = document.getElementById('detailPanel');
+  panel.innerHTML = `<div class="detail-empty"><div class="de-emoji">📍</div><h3>点击左侧任意地点</h3><p>查看拍照建议、门票、营业时间等详细信息</p></div>`;
+}
+
+function loadAmap(key, security){
+  return new Promise((resolve, reject) => {
+    if (window.AMap) return resolve();
+    window._AMapSecurityConfig = { securityJsCode: security };
+    window._amapCallback = () => { clearTimeout(timer); resolve(); };
+    const s = document.createElement('script');
+    s.src = `https://webapi.amap.com/maps?v=2.0&key=${key}&plugin=AMap.ToolBar,AMap.Scale&jscode=${security}&callback=_amapCallback`;
+    s.onerror = () => { clearTimeout(timer); reject(new Error('高德地图脚本加载失败')); };
+    const timer = setTimeout(() => { if (!window.AMap) reject(new Error('高德地图加载超时（30s）')); }, 30000);
+    document.head.appendChild(s);
+  });
+}
+
+function init(){
+  renderTimeline();
+  document.querySelectorAll('.day .day-body').forEach(b => b.style.display = 'none');
+  document.querySelectorAll('.day').forEach(d => d.classList.remove('open'));
+  bindTabs(); bindDayPills(); loadWeather();
+  const mapEl = document.getElementById('map');
+  if (mapEl.offsetHeight === 0) mapEl.style.height = 'calc(100vh - 88px)';
+  loadAmap(AMAP_KEY, AMAP_SECURITY).then(() => {
+    map = new AMap.Map('map', { zoom: 5, center: [113.0, 28.0], viewMode: '2D', mapStyle: 'amap://styles/normal', features: ['bg','point','road'] });
+    map.addControl(new AMap.Scale());
+    try { map.addControl(new AMap.ToolBar({position:'RB'})); } catch(e) {}
+    const hideLoading = () => { const el = document.getElementById('loadingTip'); if (el) el.style.display = 'none'; };
+    map.on('complete', () => {
+      try {
+        currentDay = 0;
+        document.querySelectorAll('.day-pill').forEach(p => p.classList.toggle('active', parseInt(p.dataset.day) === 0));
+        const target = document.querySelector('.day[data-day="0"]');
+        if (target) target.classList.add('active');
+        const items = VALID.filter(t => t.day === 0);
+        if (items.length) { renderMarkers(items); focusMapOnItems(items); }
+        const meta = DAY_META[0];
+        if (meta) {
+          document.getElementById('mapTitle').textContent = `🗺 ${meta.title}`;
+          document.getElementById('countBadge').textContent = `${items.length} 个标记`;
+        }
+      } catch(e) { console.error(e); }
+      hideLoading();
+    });
+    setTimeout(hideLoading, 3000);
+  }).catch(err => {
+    console.error(err);
+    const el = document.getElementById('loadingTip'); if (el) el.style.display = 'none';
+    showFallback(err.message);
+  });
+}
+
+function showFallback(msg){
+  document.getElementById('map').insertAdjacentHTML('beforeend', `<div class="error-tip"><h3 style="color:var(--accent);margin-bottom:10px">🗺 地图加载失败</h3><p style="color:#ef4444">⚠️ ${msg}</p><p style="margin-top:10px;">请检查网络或 Key 配置</p></div>`);
+}
+
+function bindDayPills(){
+  document.querySelectorAll('.day-pill').forEach(p => {
+    p.addEventListener('click', () => { const day = parseInt(p.dataset.day); selectDay(day); });
+  });
+}
+
+function bindTabs(){
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      renderTimeline(t.dataset.view);
+    });
+  });
+}
+
+function loadHtml2Canvas(){
+  return new Promise((resolve, reject) => {
+    if (window.html2canvas) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('html2canvas 加载失败'));
+    document.head.appendChild(s);
+  });
+}
+
+async function exportItinerary(){
+  const btn = document.getElementById('exportBtn');
+  const origHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="export-progress"></span> 导出中...';
+  try {
+    await loadHtml2Canvas();
+    const sidebar = document.querySelector('.sidebar');
+    const timeline = document.getElementById('timeline');
+    const origBtnVisibility = btn.style.visibility;
+    btn.style.visibility = 'hidden';
+    const origActiveTab = document.querySelector('.tab.active');
+    const origTabView = origActiveTab?.dataset.view || 'all';
+    const allTab = document.querySelector('.tab[data-view="all"]');
+    const restoreTab = origActiveTab;
+    if (allTab && origTabView !== 'all') {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      allTab.classList.add('active');
+      renderTimeline('all');
+    }
+    const origTimeline = { overflow: timeline.style.overflow, height: timeline.style.height, flex: timeline.style.flex };
+    const origSidebar = { height: sidebar.style.height, flex: sidebar.style.flex, alignSelf: sidebar.style.alignSelf };
+    const origApp = { height: document.querySelector('.app').style.height };
+    const origBodyOverflow = document.body.style.overflow;
+    const origHtmlOverflow = document.documentElement.style.overflow;
+    document.querySelector('.app').style.height = 'auto';
+    sidebar.style.height = 'auto'; sidebar.style.flex = 'none'; sidebar.style.alignSelf = 'flex-start';
+    timeline.style.overflow = 'visible'; timeline.style.height = 'auto'; timeline.style.flex = 'none';
+    document.body.style.overflow = 'visible'; document.documentElement.style.overflow = 'visible';
+    void sidebar.offsetHeight;
+    const allDays = Array.from(timeline.querySelectorAll('.day'));
+    const wasOpen = allDays.map(d => d.classList.contains('open'));
+    allDays.forEach(d => d.classList.add('open'));
+    const cover = document.createElement('div');
+    cover.className = 'export-cover';
+    cover.innerHTML = `<div class="ec-title">行程标题占位</div><div class="ec-sub">副标题占位</div><div class="ec-divider"></div><div class="ec-stats"><span>0 城市</span><span>0 景点</span><span>0 美食</span></div>`;
+    timeline.insertBefore(cover, timeline.firstChild);
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => setTimeout(r, 100));
+    const realHeight = sidebar.scrollHeight;
+    const canvas = await html2canvas(sidebar, { backgroundColor: '#f6f7fb', scale: 2, useCORS: true, logging: false, width: sidebar.offsetWidth, height: realHeight, windowWidth: sidebar.offsetWidth, windowHeight: realHeight, scrollX: 0, scrollY: 0 });
+    document.querySelector('.app').style.height = origApp.height;
+    sidebar.style.height = origSidebar.height; sidebar.style.flex = origSidebar.flex; sidebar.style.alignSelf = origSidebar.alignSelf;
+    timeline.style.overflow = origTimeline.overflow; timeline.style.height = origTimeline.height; timeline.style.flex = origTimeline.flex;
+    document.body.style.overflow = origBodyOverflow; document.documentElement.style.overflow = origHtmlOverflow;
+    btn.style.visibility = origBtnVisibility;
+    timeline.removeChild(cover);
+    allDays.forEach((d, i) => {
+      if (!wasOpen[i]) { d.classList.remove('open'); const b = d.querySelector('.day-body'); if (b) b.style.display = 'none'; }
+      else { const b = d.querySelector('.day-body'); if (b) b.style.display = 'block'; }
+    });
+    if (origTabView !== 'all' && restoreTab) {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      restoreTab.classList.add('active');
+      renderTimeline(origTabView);
+    }
+    const link = document.createElement('a');
+    link.download = `行程_${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.innerHTML = '✓ 已导出';
+    setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; }, 1800);
+  } catch (err) {
+    console.error(err);
+    btn.innerHTML = '✗ 导出失败';
+    setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; }, 2200);
+    alert('导出失败：' + err.message);
+  }
+}
+
+const exportCoverStyle = document.createElement('style');
+exportCoverStyle.textContent = `
+  .export-cover{margin:0 28px 20px;padding:32px 28px;background:var(--ink);color:#fff;}
+  .export-cover .ec-title{font-size:22px;font-weight:700;letter-spacing:-0.4px;margin-bottom:6px;}
+  .export-cover .ec-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:20px;font-weight:400;}
+  .export-cover .ec-divider{height:1px;background:rgba(255,255,255,0.15);margin:16px 0;}
+  .export-cover .ec-stats{display:flex;gap:32px;font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;}
+  .export-cover .ec-stats b{display:block;color:#fff;font-size:20px;font-weight:700;margin-bottom:2px;letter-spacing:-0.3px;}
+`;
+document.head.appendChild(exportCoverStyle);
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<!--
+  遮罩可见性探针的验证夹具（本地 20 秒验证，不用行内电脑）
+  用法：
+    1. 用浏览器打开本文件（file:///.../overlay_probe_fixture.html）
+    2. 在控制台/自动化里跑你程序里那份 PROBE_JS（参数 "[id^='ymPrompt']"）
+    3. 断言：关闭状态 {"v":0,"ids":""}  弹开状态 {"v":2,"ids":"ymPrompt:..x.. | ymPrompt_btn_0:..x.."}
+    4. 若关闭状态返回 v=1，说明你还在用 getComputedStyle().display 判可见 —— 那是错的：
+       祖先 display:none 时元素自身 computed display 仍是 inline-block。改用 getClientRects()。
+-->
+<style>
+  .hidden { display: none; }
+  #ymPrompt { border: 1px solid #888; padding: 8px; margin-top: 8px; }
+</style>
+
+<div id="ymPrompt" class="hidden">
+  <input type="button" id="ymPrompt_btn_0" value="确 定">
+  <input type="button" id="ymPrompt_btn_1" value="取 消">
+</div>
+
+<a id="_ctp_toolbar_item_button_send" href="#">发送分行审批</a>
+
+<script>
+  // 模拟 ymPrompt 行为：关闭 = 给容器加 display:none（按钮仍留在 DOM 里）
+  window.showDialog = function () {
+    document.getElementById('ymPrompt').className = '';
+  };
+  window.hideDialog = function () {
+    document.getElementById('ymPrompt').className = 'hidden';
+  };
+</script>

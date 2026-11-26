@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson NNNN：TITLE</title>
+<!-- ⬇ COPY FROM HERE - CSS block ⬇ -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --bg: #ffffff; --text: #1a1a2e; --text-secondary: #555;
+    --accent: #2563eb; --accent-light: #eff6ff; --border: #e8e8e8;
+    --card-bg: #f8f9fb; --highlight: #fefce8; --warn: #fff7ed;
+    --green: #059669; --green-bg: #ecfdf5;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.9;
+    max-width: 860px; margin: 0 auto; padding: 40px 28px 80px;
+  }
+
+  /* ── Header ── */
+  .lesson-header {
+    text-align: center; padding: 40px 0 28px;
+    border-bottom: 2px solid var(--accent); margin-bottom: 36px;
+  }
+  .lesson-num { font-size: 13px; color: var(--accent); font-weight: 600; letter-spacing: 2px; }
+  .lesson-header h1 { font-size: 28px; font-weight: 700; margin: 10px 0 8px; line-height: 1.3; }
+  .lesson-header .meta { font-size: 13px; color: var(--text-secondary); }
+
+  /* ── Headings ── */
+  h2 {
+    font-size: 20px; font-weight: 700; margin: 40px 0 16px;
+    padding-left: 12px; border-left: 4px solid var(--accent);
+  }
+  h3 { font-size: 16px; font-weight: 600; margin: 28px 0 12px; color: #333; }
+  p { margin-bottom: 16px; color: var(--text-secondary); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 26px; margin: 20px 0;
+  }
+  .card.insight { background: linear-gradient(135deg, #eff6ff, #f0f9ff); border-color: #bfdbfe; }
+  .card.warn { background: linear-gradient(135deg, #fff7ed, #fff1f2); border-color: #fecdd3; }
+  .card.green { background: linear-gradient(135deg, #ecfdf5, #f0fdf4); border-color: #a7f3d0; }
+  .card-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+
+  /* ── Flow / Diagrams ── */
+  .flow {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin: 20px 0; font-size: 13px;
+  }
+  .flow-box {
+    background: var(--accent-light); padding: 10px 16px;
+    border-radius: 8px; font-weight: 500; text-align: center;
+    border: 1px solid #bfdbfe;
+  }
+  .flow-arrow { font-size: 18px; color: var(--accent); font-weight: 700; }
+
+  /* ── Comparisons ── */
+  .comparison {
+    display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap;
+  }
+  .comparison-col {
+    flex: 1; min-width: 220px; padding: 18px;
+    border-radius: 10px; background: var(--card-bg); border: 1px solid var(--border);
+  }
+  .comparison-col h4 { font-size: 14px; margin-bottom: 8px; }
+
+  /* ── Stat boxes ── */
+  .big-stat {
+    display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0;
+  }
+  .big-stat .stat {
+    flex: 1; min-width: 140px; text-align: center;
+    padding: 16px; background: var(--accent-light); border-radius: 10px;
+  }
+  .big-stat .stat .num { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .big-stat .stat .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* ── Quizzes ── */
+  .quiz {
+    background: var(--highlight); border: 1px solid #fde68a;
+    border-radius: 12px; padding: 22px 26px; margin: 28px 0;
+  }
+  .quiz h3 { margin-top: 0; }
+
+  /* ── Tables ── */
+  table {
+    width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px;
+  }
+  th { background: var(--accent-light); padding: 10px 14px; text-align: left; font-weight: 600; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: var(--card-bg); }
+
+  /* ── Code ── */
+  pre {
+    background: #f7f7f9; border-left: 3px solid var(--accent);
+    padding: 14px 18px; border-radius: 6px; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6;
+    margin: 16px 0; color: #333;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    display: flex; justify-content: space-between; margin: 40px 0 20px;
+  }
+  .nav a {
+    padding: 12px 20px; background: var(--accent); color: white;
+    border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;
+  }
+  .nav a.prev { background: var(--card-bg); color: var(--accent); border: 1px solid var(--border); }
+  .nav a:hover { opacity: 0.9; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 12px; color: #bbb; text-align: center;
+  }
+</style>
+<!-- ⬆ END CSS ⬆ -->
+</head>
+<body>
+
+<div class="lesson-header">
+  <div class="lesson-num">Lesson NNNN</div>
+  <h1>TITLE GOES HERE</h1>
+  <div class="meta">Paper / Source &nbsp;|&nbsp; 预计阅读 N 分钟</div>
+</div>
+
+<!-- ── CORE QUESTION ── -->
+<div class="card insight">
+  <div class="card-title">🎯 这节课要回答的核心问题</div>
+  <p>问题描述。</p>
+</div>
+
+<!-- ── SECTION ── -->
+<h2>1. Section Title</h2>
+<p>Content...</p>
+
+<!-- ── INSIGHT CARD ── -->
+<div class="card insight">
+  <div class="card-title">💡 关键洞察</div>
+  <p>Insight text.</p>
+</div>
+
+<!-- ── WARNING CARD ── -->
+<div class="card warn">
+  <div class="card-title">⚠️ 注意事项</div>
+  <p>Warning text.</p>
+</div>
+
+<!-- ── COMPARISON ── -->
+<div class="comparison">
+  <div class="comparison-col">
+    <h4>Option A</h4>
+    <p style="font-size:13px;">Description.</p>
+  </div>
+  <div class="comparison-col">
+    <h4>Option B</h4>
+    <p style="font-size:13px;">Description.</p>
+  </div>
+</div>
+
+<!-- ── STATS ── -->
+<div class="big-stat">
+  <div class="stat"><div class="num">75%</div><div class="label">Label</div></div>
+  <div class="stat"><div class="num">6×</div><div class="label">Label</div></div>
+</div>
+
+<!-- ── QUIZ ── -->
+<div class="quiz">
+  <h3>📝 课后自测</h3>
+  <p style="font-weight:600; margin-top:12px;">Q1. Question?</p>
+  <p style="font-weight:600; margin-top:12px;">Q2. Question?</p>
+</div>
+
+<!-- ── NEXT ── -->
+<p style="font-size:13px;color:var(--text-secondary);margin-top:24px;">
+  🤔 有疑问随时问 Agent。<br>
+  📖 下一课预告：...
+</p>
+
+<div class="nav">
+  <a href="NNNN-prev.html" class="prev">← Lesson NNNN</a>
+  <a href="NNNN-next.html">Lesson NNNN →</a>
+</div>
+
+<div class="footer">Lesson NNNN · workspace-path</div>
+
+</body>
+</html>
